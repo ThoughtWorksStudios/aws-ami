@@ -12,12 +12,12 @@ module AWS
     # publish_to_account: publish the AMI to this account if need
     # assume_yes: true for deleting stack when creating image failed
     def initialize(options={})
-      @name = options[:name] || raise "Must have a name for the AMI"
-      @region = options[:region] || raise "Must specify aws region"
-      @key_name = options[:key_name] || raise "Please specify aws ssh key name, so that you can debug problem when something goes wrong"
-      @install_script = File.read(options[:install_script]) || raise "Must provide install packages script file"
+      @name = options[:name] || raise("Must have a name for the AMI")
+      @region = options[:region] || raise("Must specify aws region")
+      @key_name = options[:key_name] || raise("Please specify aws ssh key name, so that you can debug problem when something goes wrong")
+      @install_script = File.read(options[:install_script]) || raise("Must provide install packages script file")
 
-      @base_ami = YAML.load(File.read(options[:base_ami]))[@region] || raise "Must provide base ami yml file for each region"
+      @base_ami = YAML.load(File.read(options[:base_ami]))[@region] || raise("Must provide base ami yml file for each region")
 
       @timeout = options[:timeout] || '600'
       @assume_yes = options[:assume_yes] || false
@@ -52,7 +52,7 @@ module AWS
           logger.info "continue to create image"
         end
         logger.info "creating image"
-        image = instance.create_image(name, :description => "Created at #{Time.now}")
+        image = instance.create_image(@name, :description => "Created at #{Time.now}")
         sleep 2 until image.exists?
         logger.info "image #{image.id} state: #{image.state}"
         sleep 5 until image.state != :pending
@@ -79,7 +79,7 @@ module AWS
         logger.info "add permissions for #{@publish_to_account}"
         image.permissions.add(@publish_to_account.gsub(/-/, ''))
       end
-      logger.info "Image #{name}[#{image.id}] created"
+      logger.info "Image #{@name}[#{image.id}] created"
     end
 
     private

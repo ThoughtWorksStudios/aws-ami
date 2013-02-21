@@ -3,7 +3,6 @@
 require "rubygems"
 require File.join(File.dirname(__FILE__), '..', 'lib', 'aws_ami')
 
-
 require 'optparse'
 
 options = {}
@@ -61,10 +60,6 @@ if options[:dry]
   require 'pp'
   pp options
   exit
-end
-
-[:name, :region, :install_script, :key_name, :base_ami].each do |n|
-  raise "Must provide #{n}" unless options[n]
 end
 
 ami = AWS::AMI.new(options)
