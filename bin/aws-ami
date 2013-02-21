@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+
+require "rubygems"
+require File.join(File.dirname(__FILE__), '..', 'lib', 'aws_ami')
+
+
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: aws-ami -n [name] -r [region]"
+
+  opts.on("-n", "--name NAME", "New AMI name, include version number to version your AMIs") do |v|
+    options[:name] = v
+  end
+
+  opts.on("-r", "--region REGION", "AWS Region that new AMI should be in") do |v|
+    options[:region] = v
+  end
+
+  opts.on("-f", "--install_script_file INSTALL_SCRIPT_FILE", "The install script file, installs all packages and setup AMI") do |f|
+    options[:install_script] = f
+  end
+
+  opts.on("-k", "--ec2_ssh_key_name KEY_NAME", "The key name for accessing the ec2 instance that created for creating the AMI") do |n|
+    options[:key_name] = n
+  end
+
+  opts.on("-b", "--base_ami_yml BASE_AMI_YML", "A yaml file contains base ami for the new ami, region name and ami id key pairs") do |f|
+    options[:base_ami] = f
+  end
+
+  opts.on("-y", "--assume_yes", "Assume yes when asking for delete stack if the stack created failed, default is false") do
+    options[:assume_yes] = true
+  end
+
+  opts.on("-p", "--publish_to_account [AWS_ACCOUNT_NUMBER]", "AWS Account number; Allow another AWS Account to access the AMI created") do |v|
+    options[:publish_to_account] = v
+  end
+
+  opts.on('-h', '--help') do
+    puts opts
+    exit(0)
+  end
+
+  opts.on('--dry', "output all options values") do
+    options[:dry] = true
+  end
+end.parse!
+
+if options[:dry]
+  require 'pp'
+  pp options
+  exit
+end
+
+[:name, :region, :install_script, :key_name, :base_ami].each do |n|
+  raise "Must provide #{n}" unless options[n]
+end
+
+# ENV variables:
+#    AWS_ACCESS_KEY_ID
+#    AWS_SECRET_ACCESS_KEY
+
+ami = AWS::AMI.new(options)
+ami.build(options[:name],
+          'KeyName' => options[:key_name],
+          'InstallScript' => options[:install_script],
+          "BaseAMI" => YAML.load(File.read(options[:base_ami]))[options[:region]])

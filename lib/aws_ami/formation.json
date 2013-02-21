@@ -1,0 +1,63 @@
+{
+    "Description": "Build AMI resource formation",
+
+    "Parameters": {
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            "Type": "String"
+        },
+        "InstallScript": {
+            "Description": "Script to install everything need for the AMI",
+            "Type": "String"
+        },
+        "BaseAMI": {
+            "Description": "Base AMI for the new AMI",
+            "Type": "String"
+        }
+    },
+
+    "Resources": {
+        "SecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Enable SSH access via port 22",
+                "SecurityGroupIngress" : [ {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "22",
+                    "ToPort" : "22",
+                    "CidrIp" : "0.0.0.0/0"
+                } ]
+            }
+        },
+
+        "EC2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": { "Ref": "BaseAMI" },
+                "InstanceType": "m1.small",
+                "KeyName": { "Ref": "KeyName" },
+                "SecurityGroups": [ { "Ref": "SecurityGroup" } ],
+                "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+                    { "Ref": "InstallScript" },
+                    "\ncurl -X PUT -H 'Content-Type:' --data-binary '{\"Status\" : \"SUCCESS\",",
+                    "    \"Reason\" : \"ec2 instance launched\",",
+                    "    \"UniqueId\" : \"", {"Ref": "AWS::StackName"}, "-ec2-success\",",
+                    "    \"Data\" : \"Done\"}' ",
+                    "    \"", {"Ref" : "myWaitHandle"},"\"\n"
+                ]]}}
+            }
+        },
+        "myWaitHandle" : {
+            "Type" : "AWS::CloudFormation::WaitConditionHandle",
+            "Properties" : {
+            }
+        },
+        "myWaitCondition" : {
+            "Type" : "AWS::CloudFormation::WaitCondition",
+            "Properties" : {
+                "Handle" : { "Ref" : "myWaitHandle" },
+                "Timeout" : "300"
+            }
+        }
+    }
+}
