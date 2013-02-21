@@ -46,6 +46,11 @@ OptionParser.new do |opts|
   opts.on('--dry', "output all options values") do
     options[:dry] = true
   end
+
+  opts.on('--test', 'launch EC2 instance and install packages, but leave everything there for test') do
+    options[:test] = true
+  end
+
 end.parse!
 
 if options[:dry]

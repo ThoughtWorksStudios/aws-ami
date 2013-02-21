@@ -9,6 +9,7 @@ module AWS
       @assume_yes = options[:assume_yes]
       @region = options[:region]
       @publish_to_account = options[:publish_to_account]
+      @test = options[:test]
     end
 
     # name: new AMI name, for example: mingle-saas-base
@@ -26,7 +27,14 @@ module AWS
       wait_until_created(stack)
       begin
         instance_id = stack.resources['EC2Instance'].physical_resource_id
-
+        if @test
+          unless gets.strip == 'y'
+            logger.info "delete stack and stop"
+            stack.delete
+            return
+          end
+          logger.info "continue to create image"
+        end
         logger.info "creating image"
         image = ec2.instances[instance_id].create_image(name, :description => "Created at #{Time.now}")
         sleep 2 until image.exists?
