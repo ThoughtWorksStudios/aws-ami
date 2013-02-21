@@ -65,5 +65,5 @@ end
 ami = AWS::AMI.new(options)
 ami.build(options[:name],
           'KeyName' => options[:key_name],
-          'InstallScript' => options[:install_script],
+          'InstallScript' => File.read(options[:install_script]),
           "BaseAMI" => YAML.load(File.read(options[:base_ami]))[options[:region]])
