@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'aws-ami'
-  s.version = '0.0.3'
-  s.summary = 'AWS AMI toolsets for Ruby'
+  s.version = '0.0.4'
+  s.summary = 'A tool for creating AWS AMI from a base AMI and an install packages script'
   s.license = 'MIT'
   s.authors = ["Mingle SaaS team"]
   s.email = 'mingle.saas@thoughtworks.com'
@@ -18,5 +18,5 @@ Gem::Specification.new do |s|
   s.bindir = 'bin'
   s.executables = 'aws-ami'
 
-  s.post_install_message = "run aws-ami -h for details how to use"
+  s.post_install_message = "run 'aws-ami -h' for how to use"
 end

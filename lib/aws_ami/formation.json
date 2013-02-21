@@ -13,6 +13,11 @@
         "BaseAMI": {
             "Description": "Base AMI for the new AMI",
             "Type": "String"
+        },
+        "Timeout": {
+            "Description": "Timeout for waiting EC2 instance complete the install script",
+            "Type": "Number",
+            "Default": "600"
         }
     },
 
@@ -56,7 +61,7 @@
             "Type" : "AWS::CloudFormation::WaitCondition",
             "Properties" : {
                 "Handle" : { "Ref" : "myWaitHandle" },
-                "Timeout" : "300"
+                "Timeout" : { "Ref" : "Timeout" }
             }
         }
     }

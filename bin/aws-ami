@@ -38,6 +38,10 @@ OptionParser.new do |opts|
     options[:publish_to_account] = v
   end
 
+  opts.on("-t", "--timeout [TIMEOUT]", "Change default timeout of waiting install script run finished, default is 600 seconds") do |t|
+    options[:timeout] = t
+  end
+
   opts.on('-h', '--help') do
     puts opts
     exit(0)
@@ -63,12 +67,5 @@ end
   raise "Must provide #{n}" unless options[n]
 end
 
-# ENV variables:
-#    AWS_ACCESS_KEY_ID
-#    AWS_SECRET_ACCESS_KEY
-
 ami = AWS::AMI.new(options)
-ami.build(options[:name],
-          'KeyName' => options[:key_name],
-          'InstallScript' => File.read(options[:install_script]),
-          "BaseAMI" => YAML.load(File.read(options[:base_ami]))[options[:region]])
+ami.build

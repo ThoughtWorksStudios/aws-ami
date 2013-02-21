@@ -3,31 +3,47 @@ require 'logger'
 
 module AWS
   class AMI
+    # name: AMI name
     # region: aws region of the new AMI
+    # key_name: AWS EC2 ssh key name for accessing ec2 instance for debuging problems
+    # install_script: a script file can be run on the ec2 instance that is launched from base ami to install packages
+    # base_ami: a yml file describes base AMI used for building new AMI for each region
+    # timeout: Timeout for running install script, default 600
+    # publish_to_account: publish the AMI to this account if need
     # assume_yes: true for deleting stack when creating image failed
     def initialize(options={})
-      @assume_yes = options[:assume_yes]
-      @region = options[:region]
+      @name = options[:name] || raise "Must have a name for the AMI"
+      @region = options[:region] || raise "Must specify aws region"
+      @key_name = options[:key_name] || raise "Please specify aws ssh key name, so that you can debug problem when something goes wrong"
+      @install_script = File.read(options[:install_script]) || raise "Must provide install packages script file"
+
+      @base_ami = YAML.load(File.read(options[:base_ami]))[@region] || raise "Must provide base ami yml file for each region"
+
+      @timeout = options[:timeout] || '600'
+      @assume_yes = options[:assume_yes] || false
       @publish_to_account = options[:publish_to_account]
       @test = options[:test]
     end
 
-    # name: new AMI name, for example: mingle-saas-base
-    # parameters:
-    #   BaseAMI: the base AMI id for the new AMI, for example:
-    #     "ami-0d153248" for the "ubuntu/images/ebs/ubuntu-precise-12.04-amd64-server-20121001" in us-west-1 region
-    #   KeyName: the ssh key name for accessing the ec2 instance while building the AMI, this is only used when you need to debug problems
-    #   InstallScript: the script installs everything need for the AMI, from 2048 to 16k bytes depending on the base ami provided
-    def build(name, parameters)
-      stack = cloudformation.stacks.create("build-#{name}-ami",
+    def build
+      stack = cloudformation.stacks.create("build-#{@name}-ami",
                                            load_formation,
                                            :disable_rollback => true,
-                                           :parameters => parameters)
+                                           :parameters => {
+                                             'Timeout' => @timeout,
+                                             'KeyName' => @key_name,
+                                             'InstallScript' => @install_script,
+                                             "BaseAMI" => @base_ami
+                                           })
       logger.info "creating stack"
       wait_until_created(stack)
       begin
         instance_id = stack.resources['EC2Instance'].physical_resource_id
+        instance = ec2.instances[instance_id]
         if @test
+          puts "Build AMI Stack created"
+          puts "EC2 instance dns name: #{instance.dns_name}, ip address: #{instance.ip_address}"
+          puts "continue to create AMI Image? [y/n]"
           unless gets.strip == 'y'
             logger.info "delete stack and stop"
             stack.delete
@@ -36,7 +52,7 @@ module AWS
           logger.info "continue to create image"
         end
         logger.info "creating image"
-        image = ec2.instances[instance_id].create_image(name, :description => "Created at #{Time.now}")
+        image = instance.create_image(name, :description => "Created at #{Time.now}")
         sleep 2 until image.exists?
         logger.info "image #{image.id} state: #{image.state}"
         sleep 5 until image.state != :pending
