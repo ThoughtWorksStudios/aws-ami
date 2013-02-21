@@ -1,1 +1,26 @@
-= AWS AMI Tools
+= AWS AMI
+
+A tool for creating AWS AMI from a base AMI and an install packages script
+
+Example:
+
+After installed aws-ami.
+
+  aws-ami -n ami_name -r us-west-1 -f install_packages_script.sh -k ssh_key_name -b base_ami_yml
+
+install_packages_script.sh example:
+
+  #!/bin/sh -eu
+  sudo apt-get install rubygems
+  ....
+
+base_ami_yml file example:
+
+  us-west-1: ami-102923
+  eu-west-1: ami-232340
+
+all options:
+
+  aws-ami -h
+
+As we use user-data to inject install_packages_script to install packages, the base AMI need support user-data.
