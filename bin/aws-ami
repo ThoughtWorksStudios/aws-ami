@@ -17,6 +17,10 @@ OptionParser.new do |opts|
     options[:region] = v
   end
 
+  opts.on("--regions x,y,z", Array, "Specify a list of regions for creating AMIs, this option will overwrite --region option") do |list|
+    options[:regions] = list
+  end
+
   opts.on("-f", "--install_script_file INSTALL_SCRIPT_FILE", "The install script file, installs all packages and setup AMI") do |f|
     options[:install_script] = f
   end
@@ -62,5 +66,8 @@ if options[:dry]
   exit
 end
 
-ami = AWS::AMI.new(options)
-ami.build
+options[:regions] ||= [options[:region]]
+options[:regions].each do |region|
+  ami = AWS::AMI.new(options.merge(:region => region))
+  ami.build
+end

@@ -35,7 +35,7 @@ module AWS
                                              'InstallScript' => @install_script,
                                              "BaseAMI" => @base_ami
                                            })
-      logger.info "creating stack"
+      logger.info "creating stack for region #{@region}"
       wait_until_created(stack)
       begin
         instance_id = stack.resources['EC2Instance'].physical_resource_id
