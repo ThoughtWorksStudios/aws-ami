@@ -33,6 +33,10 @@ OptionParser.new do |opts|
     options[:base_ami] = f
   end
 
+  opts.on("-o", "--output BASE_AMI_YML_FILE_PATH", "Output created AMIs into a yaml file that aws-ami accepts to build new AMI") do |f|
+    options[:output_base_ami] = f
+  end
+
   opts.on("-y", "--assume_yes", "Assume yes when asking for delete stack if the stack created failed, default is false") do
     options[:assume_yes] = true
   end
@@ -67,7 +71,14 @@ if options[:dry]
 end
 
 options[:regions] ||= [options[:region]]
-options[:regions].each do |region|
+image_ids = options[:regions].map do |region|
   ami = AWS::AMI.new(options.merge(:region => region))
-  ami.build
+  image_id = ami.build
+  "#{region}: #{image_id}"
+end
+
+if options[:output_base_ami]
+  File.open(options[:output_base_ami], 'w') do |f|
+    f.write(image_ids.join("\n"))
+  end
 end

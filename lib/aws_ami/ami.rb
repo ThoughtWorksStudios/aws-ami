@@ -79,7 +79,9 @@ module AWS
         logger.info "add permissions for #{@publish_to_account}"
         image.permissions.add(@publish_to_account.gsub(/-/, ''))
       end
-      logger.info "Image #{@name}[#{image.id}] created"
+      image.id.tap do |image_id|
+        logger.info "Image #{@name}[#{image_id}] created"
+      end
     end
 
     private
