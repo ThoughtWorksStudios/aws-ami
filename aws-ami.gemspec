@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'aws-ami'
-  s.version = '0.0.8'
+  s.version = '0.0.9'
   s.summary = 'A tool for creating AWS AMI from a base AMI and an install packages script'
   s.license = 'MIT'
   s.authors = ["Mingle SaaS team"]
